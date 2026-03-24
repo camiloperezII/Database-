@@ -2,11 +2,12 @@
 session_start(); // Required for Toast Notifications
 require_once 'database.php';
 
-$id = 0; $name = ""; $email = ""; $gender = ""; $age = ""; $purpose = ""; $mobile = ""; $update = false;
+$id = 0; $name = ""; $address = ""; $email = ""; $gender = ""; $age = ""; $purpose = ""; $mobile = ""; $update = false;
 
 /* ================= ADD / UPDATE ================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add']) || isset($_POST['update']))) {
-    $name = trim($_POST['name']); 
+    $name = trim($_POST['name']);
+    $address = trim($_POST['address']); 
     $email = trim($_POST['email']); 
     $gender = $_POST['gender']; 
     $age = $_POST['age']; 
@@ -14,12 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add']) || isset($_PO
     $mobile = trim($_POST['numv']);
     
     if (isset($_POST['update'])) {
-        $stmt = $conn->prepare("UPDATE students SET name=?, email=?, gender=?, age=?, purpose=?, numv=? WHERE id=?");
-        $stmt->bind_param("sssissi", $name, $email, $gender, $age, $purpose, $mobile, $_POST['id']);
+        $stmt = $conn->prepare("UPDATE students SET name=?, address=?,email=?, gender=?, age=?, purpose=?, numv=? WHERE id=?");
+        $stmt->bind_param("ssssissi", $name, $address, $email, $gender, $age, $purpose, $mobile, $_POST['id']);
         $_SESSION['msg'] = "Record Updated Successfully!";
     } else {
-        $stmt = $conn->prepare("INSERT INTO students (name, email, gender, age, purpose, numv) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssiss", $name, $email, $gender, $age, $purpose, $mobile);
+        $stmt = $conn->prepare("INSERT INTO students (name, address, email, gender, age, purpose, numv) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssiss", $name, $address, $email, $gender, $age, $purpose, $mobile);
         $_SESSION['msg'] = "New Record Registered!";
     }
     $stmt->execute(); 
@@ -33,6 +34,7 @@ if (isset($_GET['edit'])) {
     $res = $conn->query("SELECT * FROM students WHERE id=" . (int)$_GET['edit']);
     if($data = $res->fetch_assoc()){
         $name = $data['name']; $email = $data['email']; $gender = $data['gender'];
+        $address = $data['address'];
         $age = $data['age']; $purpose = $data['purpose']; $mobile = $data['numv']; $id = $data['id'];
     }
 }
@@ -40,31 +42,50 @@ if (isset($_GET['edit'])) {
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" id="topBtn">↑</button>
+<header>
+
     <meta charset="utf-8">
     <title>Paombong Database System</title>
     <link rel="icon" type="image/png" href="Images/Paombong.png">
     <link rel="stylesheet" href="style.css?v=<?= time(); ?>">
-</head>
+</header>
 <body>
 
+    <div class = "topcontainer">
+        <nav class = "topnav">
+            <div class ="listtop">
+                <img src="images/Paombong.png" alt="Municipality Logo" class="navlogo">
+                <p class= "navtext"> | Human Resource Management Office</p>
+            </div>
+        </nav>
+    </div>
+
 <div class="container">
-    <h2>Municipality of Paombong</h2>
+    <div class = "infoandgreet">
+     <h2 id="greeting" class="greetingtext">Hello, </h2>
     <p style="text-align:right; margin-bottom: 20px;">
-        <span class="system-time">SYSTEM TIME:</span> <span id="clock"></span>
-    </p>
+        <span class="systemtime">🕰️ SYSTEM TIME:</span> <span id="clock"></span>
+    </p></div>
 
     <form method="POST" autocomplete="off">
         <input type="hidden" name="id" value="<?= $id ?>">
-        
+
+    
+
         <div class="form-group">
             <label>Full Name</label>
             <input type="text" name="name" value="<?= htmlspecialchars($name) ?>" placeholder="e.g. Juan Dela Cruz" required>
         </div>
+        
+        <div class="form-group">
+            <label>Address</label>
+            <input type="text" name="address" value="<?= htmlspecialchars($address) ?>" placeholder="e.g. Paombong Bulacan" required>
+        </div>
 
         <div class="form-group">
             <label>Email Address</label>
-            <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" placeholder="email@example.com" required>
+            <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" placeholder="email@example.com">
         </div>
 
         <div class="row">
@@ -88,8 +109,8 @@ if (isset($_GET['edit'])) {
         </div>
 
         <div class="form-group">
-            <label>Contact Number (Mobile)</label>
-            <input type="tel" name="numv" value="<?= htmlspecialchars($mobile) ?>" placeholder="09123456789" required maxlength="11" pattern="\d{11}" oninput="this.value=this.value.replace(/\D/g,'')">
+            <label>Contact Number</label>
+            <input type="tel" name="numv" value="<?= htmlspecialchars($mobile) ?>" placeholder="Enter Mobile No." required maxlength="11" pattern="\d{11}" oninput="this.value=this.value.replace(/\D/g,'')">
         </div>
 
         <button type="submit" name="<?= $update ? 'update' : 'add' ?>" class="btn-submit">
@@ -97,19 +118,20 @@ if (isset($_GET['edit'])) {
         </button>
 
         <a href="view_records.php" class="btn-export" style="text-align:center; display:block; margin-top: 15px; width: auto; color: white; text-decoration: none;">
-            View All Registered Records
+            View Registered Records
         </a>
     </form>
 </div>
-
-<script>
-    function updateClock() {
-        document.getElementById("clock").innerHTML = new Date().toLocaleString('en-US', { 
-            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
-            month: 'short', day: '2-digit', year: 'numeric'
-        });
-    }
-    setInterval(updateClock, 1000); updateClock();
-</script>
+<script src="script.js"></script>
+<footer class ="info">
+    <div class="footercontent">
+        <p class="footer-location">
+            <span>📍</span> Municipal Hall, Poblacion Road, Paombong, Bulacan Philippines
+        </p>
+        <p class="copyright">
+            &copy; 2026 Municipality of Paombong | <span class="goldtext">HRMS v1.0</span>
+        </p>
+    </div>
+</footer>
 </body>
 </html>
