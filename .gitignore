@@ -4,3 +4,5 @@
 
 # Ignore the database connection credentials
 database.php
+
+Images/
