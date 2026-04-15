@@ -1,8 +1,8 @@
 # Ignore the actual database export
-127_0_0_1.sql
-*.sql
+#127_0_0_1.sql
+#*.sql
 
 # Ignore the database connection credentials
-database.php
+#database.php
 
-Images/
+#Images/
